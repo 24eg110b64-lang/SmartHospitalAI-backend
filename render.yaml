@@ -1,27 +1,39 @@
-# render.yaml — Render.com service definitions
-# Defines BOTH the Spring Boot backend and the Flask AI service.
+# render.yaml — Render.com Blueprint (updated for Docker-based Spring Boot)
 # See: https://render.com/docs/blueprint-spec
+#
+# Two services:
+#   smarthospital-backend  — Spring Boot 3.5 / Java 17  (Docker build)
+#   smarthospital-ai       — Python Flask + scikit-learn (native Python runtime)
+#
+# All secrets are set in the Render dashboard — NEVER commit real values here.
 
 services:
 
   # ─── Spring Boot Backend ──────────────────────────────────────────────────
+  # Uses Docker so we control the exact JDK version and JVM heap flag.
+  # Dockerfile lives at backend/Dockerfile; build context is the backend/ dir.
   - type: web
     name: smarthospital-backend
-    runtime: java
-    buildCommand: cd backend && ./mvnw -B package -DskipTests
-    startCommand: java -jar backend/target/demo-0.0.1-SNAPSHOT.jar
+    runtime: docker
+    dockerfilePath: backend/Dockerfile    # path from repo root
+    dockerContext: backend                # build context = backend/ directory
+                                          # so COPY paths inside Dockerfile are
+                                          # relative to backend/
     envVars:
       - key: DB_URL
-        sync: false          # set manually in Render dashboard
+        sync: false          # jdbc:mysql://<host>:3306/hospital_db — set in dashboard
       - key: DB_USERNAME
-        sync: false
+        sync: false          # your MySQL username — set in dashboard
       - key: DB_PASSWORD
-        sync: false
+        sync: false          # your MySQL password — set in dashboard, NEVER commit
       - key: ALLOWED_ORIGIN
-        sync: false          # set to Vercel frontend URL after deploy
-    healthCheckPath: /actuator/health   # optional — add actuator if desired
+        sync: false          # your Vercel frontend URL, e.g. https://xxx.vercel.app
+    healthCheckPath: /health              # served by HealthController.java → HTTP 200
 
-  # ─── Python Flask AI Service ───────────────────────────────────────────────
+  # ─── Python Flask AI Service ──────────────────────────────────────────────
+  # Uses Render's native Python runtime (no Docker needed for Flask).
+  # app.py loads the model via: BASE_DIR/../ml-model/disease_model.pkl
+  # Both ai-service/ and ml-model/ are at repo root — path resolves correctly.
   - type: web
     name: smarthospital-ai
     runtime: python
