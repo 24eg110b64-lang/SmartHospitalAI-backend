@@ -5,10 +5,10 @@ FROM eclipse-temurin:17-jdk-jammy AS builder
 
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml first for Docker layer caching.
-# Dependencies are only re-downloaded when pom.xml changes.
-COPY .mvn .mvn
-COPY mvnw pom.xml ./
+# Copy Maven wrapper and pom.xml from backend/ for Docker layer caching.
+# Build context is the repository root (Render's default).
+COPY backend/.mvn .mvn
+COPY backend/mvnw backend/pom.xml ./
 
 # Ensure the Maven wrapper script is executable on Linux.
 RUN chmod +x mvnw
@@ -16,8 +16,8 @@ RUN chmod +x mvnw
 # Download dependencies offline for fast, reproducible builds.
 RUN ./mvnw dependency:go-offline -B
 
-# Copy full application source code.
-COPY src ./src
+# Copy full application source code from backend/src.
+COPY backend/src ./src
 
 # Build the fat JAR (-DskipTests avoids requiring a live database at build time).
 RUN ./mvnw -B package -DskipTests

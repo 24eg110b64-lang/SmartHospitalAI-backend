@@ -11,13 +11,12 @@ services:
 
   # ─── Spring Boot Backend ──────────────────────────────────────────────────
   # Uses Docker so we control the exact JDK version and JVM heap flag.
-  # Service root directory is backend/, where pom.xml, mvnw, and src/ reside.
+  # Build context is the repository root (Render's default).
   - type: web
     name: smarthospital-backend
     runtime: docker
-    rootDir: backend                      # Scopes service to backend/ directory
-    dockerfilePath: Dockerfile            # Path relative to rootDir (backend/Dockerfile)
-    dockerContext: .                      # Build context relative to rootDir (backend/)
+    dockerfilePath: backend/Dockerfile    # Path from repository root
+    dockerContext: .                      # Build context is repository root
     envVars:
       - key: DB_URL
         sync: false          # jdbc:mysql://<host>:3306/hospital_db — set in dashboard
