@@ -5,25 +5,21 @@ FROM eclipse-temurin:17-jdk-jammy AS builder
 
 WORKDIR /app
 
-# Copy Maven wrapper and pom.xml first.
-# Docker caches this layer separately so dependency downloads are
-# only re-run when pom.xml actually changes — speeds up subsequent builds.
-COPY .mvn/    .mvn/
-COPY mvnw     mvnw
-COPY pom.xml  pom.xml
+# Copy Maven wrapper and pom.xml first for Docker layer caching.
+# Dependencies are only re-downloaded when pom.xml changes.
+COPY .mvn .mvn
+COPY mvnw pom.xml ./
 
 # Ensure the Maven wrapper script is executable on Linux.
-# (Windows git does not always preserve the execute bit.)
 RUN chmod +x mvnw
 
-# Download all dependencies offline so the next step can build without
-# hitting the network again if only source files changed.
+# Download dependencies offline for fast, reproducible builds.
 RUN ./mvnw dependency:go-offline -B
 
-# Copy full source tree and build the fat JAR.
-# -DskipTests avoids running Spring Boot integration tests during the Docker build
-# (tests require a live database that is not available at build time).
-COPY src/ src/
+# Copy full application source code.
+COPY src ./src
+
+# Build the fat JAR (-DskipTests avoids requiring a live database at build time).
 RUN ./mvnw -B package -DskipTests
 
 # ─── Stage 2: Runtime ─────────────────────────────────────────────────────────
