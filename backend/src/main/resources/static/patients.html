@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Patients - Smart Hospital AI</title>
+
+    <link rel="stylesheet" href="/style.css">
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <h1>👤 Patients</h1>
+
+    <p>Smart Hospital AI</p>
+
+    <button onclick="logout()">🚪 Logout</button>
+
+    <button onclick="location.href='/'">
+        🏠 Dashboard
+    </button>
+
+</header>
+
+
+
+<div class="form-box">
+
+    <h2>🔍 Search Patient</h2>
+
+    <input
+        type="text"
+        id="search"
+        placeholder="Search by name"
+        onkeyup="searchPatients()"
+    >
+
+</div>
+
+
+
+<div class="doctor-list" id="patientList">
+
+    <p>Loading patients...</p>
+
+</div>
+
+
+
+<script>
+
+/* LOGIN CHECK */
+
+const user =
+    localStorage.getItem("loggedInUser");
+
+if (!user) {
+
+    window.location.href = "/login.html";
+
+}
+
+
+/* PATIENT DATA */
+
+let patients = [];
+
+
+/* LOAD PATIENTS */
+
+function loadPatients() {
+
+    fetch("/patients")
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        patients = data;
+
+        displayPatients(patients);
+
+    })
+
+    .catch(error => {
+
+        console.error(error);
+
+        document.getElementById("patientList").innerHTML =
+            "<p>Unable to load patients.</p>";
+
+    });
+
+}
+
+
+/* DISPLAY PATIENTS */
+
+function displayPatients(data) {
+
+    const list =
+        document.getElementById("patientList");
+
+    list.innerHTML = "";
+
+
+    if (data.length === 0) {
+
+        list.innerHTML =
+            "<p>No patients found.</p>";
+
+        return;
+    }
+
+
+    data.forEach(patient => {
+
+        const card =
+            document.createElement("div");
+
+        card.className = "doctor-card";
+
+
+        card.innerHTML = `
+
+            <h2>👤
+                ${patient.firstName}
+                ${patient.lastName}
+            </h2>
+
+            <p><b>Age:</b>
+                ${patient.age}
+            </p>
+
+            <p><b>Gender:</b>
+                ${patient.gender}
+            </p>
+
+            <p><b>Blood Group:</b>
+                ${patient.bloodGroup}
+            </p>
+
+            <p><b>Phone:</b>
+                ${patient.phone}
+            </p>
+
+            <p><b>Email:</b>
+                ${patient.email}
+            </p>
+
+            <p><b>Address:</b>
+                ${patient.address}
+            </p>
+
+            <p><b>Disease:</b>
+                ${patient.disease}
+            </p>
+
+        `;
+
+
+        list.appendChild(card);
+
+    });
+
+}
+
+
+/* SEARCH */
+
+function searchPatients() {
+
+    const search =
+        document.getElementById("search")
+        .value
+        .toLowerCase();
+
+
+    const filtered =
+        patients.filter(patient =>
+
+            (
+                patient.firstName +
+                " " +
+                patient.lastName
+            )
+            .toLowerCase()
+            .includes(search)
+
+        );
+
+
+    displayPatients(filtered);
+
+}
+
+
+/* LOGOUT */
+
+function logout() {
+
+    localStorage.removeItem("loggedInUser");
+
+    localStorage.removeItem("userRole");
+
+    window.location.href = "/login.html";
+
+}
+
+
+loadPatients();
+
+</script>
+
+
+</body>
+
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Doctors - Smart Hospital AI</title>
+
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<header>
+
+    <h1>👨‍⚕️ Doctors</h1>
+
+    <p>Smart Hospital AI</p>
+
+    <button onclick="logout()">🚪 Logout</button>
+
+    <button onclick="location.href='/'">🏠 Dashboard</button>
+
+</header>
+
+
+<h2>Doctor List</h2>
+
+
+<div class="doctor-list" id="doctorList">
+
+    <p>Loading doctors...</p>
+
+</div>
+
+
+<script>
+
+/* LOGIN CHECK */
+
+const user = localStorage.getItem("loggedInUser");
+
+if (!user) {
+    window.location.href = "/login.html";
+}
+
+
+/* LOAD DOCTORS */
+
+fetch("/doctors")
+
+.then(response => response.json())
+
+.then(doctors => {
+
+    const list = document.getElementById("doctorList");
+
+    list.innerHTML = "";
+
+    if (doctors.length === 0) {
+
+        list.innerHTML = "<p>No doctors found.</p>";
+
+        return;
+    }
+
+
+    doctors.forEach(doctor => {
+
+        const card = document.createElement("div");
+
+        card.className = "doctor-card";
+
+
+        card.innerHTML = `
+
+            <h2>👨‍⚕️ ${doctor.doctorName}</h2>
+
+            <p><b>Specialization:</b>
+                ${doctor.specialization}
+            </p>
+
+            <p><b>Experience:</b>
+                ${doctor.experience} years
+            </p>
+
+            <p><b>Qualification:</b>
+                ${doctor.qualification}
+            </p>
+
+            <p><b>Phone:</b>
+                ${doctor.phone}
+            </p>
+
+            <p><b>Email:</b>
+                ${doctor.email}
+            </p>
+
+            <p><b>Availability:</b>
+                ${doctor.availability}
+            </p>
+
+            <p><b>Consultation Fee:</b>
+                ₹${doctor.consultationFee}
+            </p>
+
+        `;
+
+
+        list.appendChild(card);
+
+    });
+
+})
+
+
+.catch(error => {
+
+    console.error(error);
+
+    document.getElementById("doctorList").innerHTML =
+        "<p>Unable to load doctors.</p>";
+
+});
+
+
+/* LOGOUT */
+
+function logout() {
+
+    localStorage.removeItem("loggedInUser");
+
+    localStorage.removeItem("userRole");
+
+    window.location.href = "/login.html";
+
+}
+
+</script>
+
+</body>
+
+</html>

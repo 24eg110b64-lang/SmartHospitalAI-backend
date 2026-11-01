@@ -1,0 +1,78 @@
+# ========================
+# Java / Spring Boot
+# ========================
+**/target/
+*.class
+*.jar
+*.war
+
+# Maven wrapper jar (generated on first mvn run — not needed in repo)
+backend/.mvn/wrapper/maven-wrapper.jar
+
+# JVM crash / replay logs
+hs_err_pid*.log
+replay_pid*.log
+
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+*.pyo
+*$py.class
+
+.venv/
+venv/
+env/
+ENV/
+.pytest_cache/
+
+# ========================
+# Logs
+# ========================
+*.log
+logs/
+
+# ========================
+# IDE / Editor
+# ========================
+.vscode/
+.idea/
+*.iml
+*.suo
+*.user
+
+# ========================
+# OS artefacts
+# ========================
+.DS_Store
+Thumbs.db
+
+# ========================
+# Secrets / Environment variables
+# -------------------------------------------------------
+# NEVER commit real credentials.
+# Only *.example files with placeholder values are tracked.
+# -------------------------------------------------------
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+application-local.properties
+application-secret.properties
+
+# ========================
+# Database dumps
+# ========================
+*.sql.gz
+*.dump
+*.bak
+
+# ========================
+# ML model note
+# -------------------------------------------------------
+# ml-model/disease_model.pkl IS intentionally tracked —
+# it is a required runtime dependency of the Flask
+# ai-service. Do NOT add *.pkl to this file.
+# ========================

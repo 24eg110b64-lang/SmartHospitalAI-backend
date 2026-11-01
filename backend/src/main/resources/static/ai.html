@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>AI Prediction - Smart Hospital AI</title>
+
+    <link rel="stylesheet" href="/style.css">
+
+</head>
+
+
+<body>
+
+
+<header>
+
+    <h1>🤖 Smart Hospital AI</h1>
+
+    <p>AI Health Prediction</p>
+
+    <button onclick="logout()">
+        🚪 Logout
+    </button>
+
+    <button onclick="location.href='/'">
+        🏠 Dashboard
+    </button>
+
+</header>
+
+
+
+<div class="form-box">
+
+    <h2>🩺 AI Symptom Analysis</h2>
+
+    <p>
+        Enter one or more symptoms:
+    </p>
+
+
+    <input
+        type="text"
+        id="symptoms"
+        placeholder="Example: fever, cough, headache"
+    >
+
+
+    <br><br>
+
+
+    <button onclick="predictDisease()">
+        🤖 Analyze Symptoms
+    </button>
+
+</div>
+
+
+
+<div class="form-box"
+     id="result"
+     style="display:none;">
+
+    <h2>🔍 AI Analysis Result</h2>
+
+
+    <p>
+        <b>Symptoms:</b>
+        <span id="resultSymptoms"></span>
+    </p>
+
+
+    <p>
+        <b>Prediction:</b>
+        <span id="resultPrediction"></span>
+    </p>
+
+
+    <p>
+        <b>Confidence:</b>
+        <span id="resultConfidence"></span>%
+    </p>
+
+
+    <p>
+        <b>Recommended Specialist:</b>
+        <span id="resultSpecialist"></span>
+    </p>
+
+
+    <hr>
+
+
+    <p>
+        ⚠️ This is an AI-based preliminary prediction
+        and is not a medical diagnosis.
+        Please consult a qualified doctor.
+    </p>
+
+</div>
+
+
+
+<script>
+
+
+/* LOGIN CHECK */
+
+const user =
+    localStorage.getItem("loggedInUser");
+
+
+if (!user) {
+
+    window.location.href =
+        "/login.html";
+
+}
+
+
+
+/* AI PREDICTION */
+
+function predictDisease() {
+
+
+    const symptoms =
+        document.getElementById("symptoms")
+        .value
+        .trim();
+
+
+    if (!symptoms) {
+
+        alert(
+            "Please enter your symptoms."
+        );
+
+        return;
+
+    }
+
+
+    fetch(
+        "http://localhost:5000/predict",
+        {
+
+            method: "POST",
+
+            headers: {
+
+                "Content-Type":
+                    "application/json"
+
+            },
+
+            body: JSON.stringify({
+
+                symptoms: symptoms
+
+            })
+
+        }
+    )
+
+
+    .then(response => {
+
+        if (!response.ok) {
+
+            throw new Error(
+                "AI service error"
+            );
+
+        }
+
+        return response.json();
+
+    })
+
+
+    .then(data => {
+
+
+        document.getElementById(
+            "result"
+        ).style.display = "block";
+
+
+        document.getElementById(
+            "resultSymptoms"
+        ).innerText =
+            data.symptoms;
+
+
+        document.getElementById(
+            "resultPrediction"
+        ).innerText =
+            data.prediction;
+
+
+        document.getElementById(
+            "resultConfidence"
+        ).innerText =
+            data.confidence;
+
+
+        document.getElementById(
+            "resultSpecialist"
+        ).innerText =
+            data.specialist;
+
+    })
+
+
+    .catch(error => {
+
+        console.error(error);
+
+        alert(
+            "Unable to connect to AI service. " +
+            "Make sure Flask is running."
+        );
+
+    });
+
+}
+
+
+
+/* LOGOUT */
+
+function logout() {
+
+    localStorage.removeItem(
+        "loggedInUser"
+    );
+
+    localStorage.removeItem(
+        "userRole"
+    );
+
+
+    window.location.href =
+        "/login.html";
+
+}
+
+</script>
+
+
+</body>
+
+</html>

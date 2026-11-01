@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Appointments - Smart Hospital AI</title>
+
+    <link rel="stylesheet" href="/style.css">
+
+</head>
+
+
+<body>
+
+<header>
+
+    <h1>📅 Appointments</h1>
+
+    <p>Smart Hospital AI</p>
+
+    <button onclick="logout()">🚪 Logout</button>
+
+    <button onclick="location.href='/'">
+        🏠 Dashboard
+    </button>
+
+</header>
+
+
+<!-- ADD / EDIT FORM -->
+
+<div class="form-box">
+
+    <h2 id="formTitle">➕ Add Appointment</h2>
+
+    <input type="hidden" id="appointmentId">
+
+
+    <select id="patient">
+        <option value="">Select Patient</option>
+    </select>
+
+
+    <select id="doctor">
+        <option value="">Select Doctor</option>
+    </select>
+
+
+    <input
+        type="date"
+        id="date"
+    >
+
+
+    <input
+        type="time"
+        id="time"
+    >
+
+
+    <select id="status">
+
+        <option value="Scheduled">
+            Scheduled
+        </option>
+
+        <option value="Completed">
+            Completed
+        </option>
+
+        <option value="Cancelled">
+            Cancelled
+        </option>
+
+    </select>
+
+
+    <br><br>
+
+
+    <button onclick="saveAppointment()">
+        💾 Save Appointment
+    </button>
+
+
+    <button
+        id="cancelButton"
+        onclick="cancelEdit()"
+        style="display:none;">
+        ❌ Cancel
+    </button>
+
+</div>
+
+
+<!-- SEARCH AND FILTER -->
+
+<div class="form-box">
+
+    <h2>🔍 Search Appointments</h2>
+
+
+    <input
+        type="text"
+        id="search"
+        placeholder="Search patient or doctor"
+        onkeyup="filterAppointments()"
+    >
+
+
+    <select
+        id="filterStatus"
+        onchange="filterAppointments()">
+
+        <option value="All">All Status</option>
+
+        <option value="Scheduled">
+            Scheduled
+        </option>
+
+        <option value="Completed">
+            Completed
+        </option>
+
+        <option value="Cancelled">
+            Cancelled
+        </option>
+
+    </select>
+
+</div>
+
+
+<!-- APPOINTMENTS -->
+
+<div
+    class="doctor-list"
+    id="appointmentList">
+
+    <p>Loading appointments...</p>
+
+</div>
+
+
+<script>
+
+
+/* =========================
+   LOGIN CHECK
+========================= */
+
+const user =
+    localStorage.getItem("loggedInUser");
+
+if (!user) {
+
+    window.location.href =
+        "/login.html";
+
+}
+
+
+/* =========================
+   VARIABLES
+========================= */
+
+let appointments = [];
+
+
+/* =========================
+   LOAD PATIENTS
+========================= */
+
+function loadPatients() {
+
+    fetch("/patients")
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        const select =
+            document.getElementById("patient");
+
+        data.forEach(patient => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = patient.id;
+
+            option.textContent =
+                patient.firstName +
+                " " +
+                patient.lastName;
+
+            select.appendChild(option);
+
+        });
+
+    });
+
+}
+
+
+/* =========================
+   LOAD DOCTORS
+========================= */
+
+function loadDoctors() {
+
+    fetch("/doctors")
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        const select =
+            document.getElementById("doctor");
+
+        data.forEach(doctor => {
+
+            const option =
+                document.createElement("option");
+
+            option.value = doctor.id;
+
+            option.textContent =
+                doctor.doctorName +
+                " - " +
+                doctor.specialization;
+
+            select.appendChild(option);
+
+        });
+
+    });
+
+}
+
+
+/* =========================
+   LOAD APPOINTMENTS
+========================= */
+
+function loadAppointments() {
+
+    fetch("/appointments")
+
+    .then(response => response.json())
+
+    .then(data => {
+
+        appointments = data;
+
+        displayAppointments(data);
+
+    })
+
+    .catch(error => {
+
+        console.error(error);
+
+        document.getElementById(
+            "appointmentList"
+        ).innerHTML =
+            "<p>Unable to load appointments.</p>";
+
+    });
+
+}
+
+
+/* =========================
+   DISPLAY APPOINTMENTS
+========================= */
+
+function displayAppointments(data) {
+
+    const list =
+        document.getElementById(
+            "appointmentList"
+        );
+
+    list.innerHTML = "";
+
+
+    if (data.length === 0) {
+
+        list.innerHTML =
+            "<p>No appointments found.</p>";
+
+        return;
+
+    }
+
+
+    data.forEach(appointment => {
+
+        const card =
+            document.createElement("div");
+
+        card.className =
+            "doctor-card";
+
+
+        const patient =
+            appointment.patient;
+
+        const doctor =
+            appointment.doctor;
+
+
+        card.innerHTML = `
+
+            <h2>📅 Appointment</h2>
+
+            <p>
+                <b>Patient:</b>
+                ${patient.firstName}
+                ${patient.lastName}
+            </p>
+
+            <p>
+                <b>Doctor:</b>
+                ${doctor.doctorName}
+            </p>
+
+            <p>
+                <b>Specialization:</b>
+                ${doctor.specialization}
+            </p>
+
+            <p>
+                <b>Date:</b>
+                ${appointment.appointmentDate}
+            </p>
+
+            <p>
+                <b>Time:</b>
+                ${appointment.appointmentTime}
+            </p>
+
+            <p>
+                <b>Status:</b>
+                ${appointment.status}
+            </p>
+
+            <br>
+
+            <button
+                onclick="editAppointment(
+                    ${appointment.id}
+                )">
+
+                ✏️ Edit
+
+            </button>
+
+
+            <button
+                onclick="deleteAppointment(
+                    ${appointment.id}
+                )">
+
+                🗑️ Delete
+
+            </button>
+
+        `;
+
+
+        list.appendChild(card);
+
+    });
+
+}
+
+
+/* =========================
+   SAVE APPOINTMENT
+========================= */
+
+function saveAppointment() {
+
+    const id =
+        document.getElementById(
+            "appointmentId"
+        ).value;
+
+
+    const patientId =
+        document.getElementById(
+            "patient"
+        ).value;
+
+
+    const doctorId =
+        document.getElementById(
+            "doctor"
+        ).value;
+
+
+    const date =
+        document.getElementById(
+            "date"
+        ).value;
+
+
+    const time =
+        document.getElementById(
+            "time"
+        ).value;
+
+
+    const status =
+        document.getElementById(
+            "status"
+        ).value;
+
+
+    if (
+        !patientId ||
+        !doctorId ||
+        !date ||
+        !time
+    ) {
+
+        alert(
+            "Please fill all appointment details."
+        );
+
+        return;
+
+    }
+
+
+    const appointment = {
+
+        patient: {
+            id: Number(patientId)
+        },
+
+        doctor: {
+            id: Number(doctorId)
+        },
+
+        appointmentDate: date,
+
+        appointmentTime: time,
+
+        status: status
+
+    };
+
+
+    let url =
+        "/appointments";
+
+    let method =
+        "POST";
+
+
+    if (id) {
+
+        url =
+            "/appointments/" + id;
+
+        method =
+            "PUT";
+
+    }
+
+
+    fetch(url, {
+
+        method: method,
+
+        headers: {
+
+            "Content-Type":
+                "application/json"
+
+        },
+
+        body:
+            JSON.stringify(appointment)
+
+    })
+
+    .then(response => {
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Failed to save appointment"
+            );
+
+        }
+
+        return response.json();
+
+    })
+
+    .then(() => {
+
+        alert(
+            id
+                ? "Appointment updated successfully!"
+                : "Appointment added successfully!"
+        );
+
+
+        clearForm();
+
+        loadAppointments();
+
+    })
+
+    .catch(error => {
+
+        console.error(error);
+
+        alert(
+            "Unable to save appointment."
+        );
+
+    });
+
+}
+
+
+/* =========================
+   EDIT APPOINTMENT
+========================= */
+
+function editAppointment(id) {
+
+    const appointment =
+        appointments.find(
+            a => a.id === id
+        );
+
+
+    if (!appointment) {
+
+        return;
+
+    }
+
+
+    document.getElementById(
+        "appointmentId"
+    ).value = appointment.id;
+
+
+    document.getElementById(
+        "patient"
+    ).value =
+        appointment.patient.id;
+
+
+    document.getElementById(
+        "doctor"
+    ).value =
+        appointment.doctor.id;
+
+
+    document.getElementById(
+        "date"
+    ).value =
+        appointment.appointmentDate;
+
+
+    document.getElementById(
+        "time"
+    ).value =
+        appointment.appointmentTime;
+
+
+    document.getElementById(
+        "status"
+    ).value =
+        appointment.status;
+
+
+    document.getElementById(
+        "formTitle"
+    ).innerText =
+        "✏️ Edit Appointment";
+
+
+    document.getElementById(
+        "cancelButton"
+    ).style.display =
+        "inline-block";
+
+
+    window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+    });
+
+}
+
+
+/* =========================
+   CANCEL EDIT
+========================= */
+
+function cancelEdit() {
+
+    clearForm();
+
+}
+
+
+/* =========================
+   CLEAR FORM
+========================= */
+
+function clearForm() {
+
+    document.getElementById(
+        "appointmentId"
+    ).value = "";
+
+
+    document.getElementById(
+        "patient"
+    ).value = "";
+
+
+    document.getElementById(
+        "doctor"
+    ).value = "";
+
+
+    document.getElementById(
+        "date"
+    ).value = "";
+
+
+    document.getElementById(
+        "time"
+    ).value = "";
+
+
+    document.getElementById(
+        "status"
+    ).value =
+        "Scheduled";
+
+
+    document.getElementById(
+        "formTitle"
+    ).innerText =
+        "➕ Add Appointment";
+
+
+    document.getElementById(
+        "cancelButton"
+    ).style.display =
+        "none";
+
+}
+
+
+/* =========================
+   DELETE
+========================= */
+
+function deleteAppointment(id) {
+
+    if (
+        !confirm(
+            "Are you sure you want to delete this appointment?"
+        )
+    ) {
+
+        return;
+
+    }
+
+
+    fetch(
+        "/appointments/" + id,
+        {
+            method: "DELETE"
+        }
+    )
+
+    .then(response => {
+
+        if (!response.ok) {
+
+            throw new Error(
+                "Delete failed"
+            );
+
+        }
+
+        return response.text();
+
+    })
+
+    .then(() => {
+
+        alert(
+            "Appointment deleted successfully!"
+        );
+
+        loadAppointments();
+
+    })
+
+    .catch(error => {
+
+        console.error(error);
+
+        alert(
+            "Unable to delete appointment."
+        );
+
+    });
+
+}
+
+
+/* =========================
+   SEARCH + FILTER
+========================= */
+
+function filterAppointments() {
+
+    const search =
+        document.getElementById(
+            "search"
+        ).value.toLowerCase();
+
+
+    const status =
+        document.getElementById(
+            "filterStatus"
+        ).value;
+
+
+    const filtered =
+        appointments.filter(
+            appointment => {
+
+                const patientName =
+                    (
+                        appointment.patient.firstName +
+                        " " +
+                        appointment.patient.lastName
+                    ).toLowerCase();
+
+
+                const doctorName =
+                    appointment.doctor.doctorName
+                    .toLowerCase();
+
+
+                const matchesSearch =
+                    patientName.includes(search) ||
+                    doctorName.includes(search);
+
+
+                const matchesStatus =
+                    status === "All" ||
+                    appointment.status === status;
+
+
+                return (
+                    matchesSearch &&
+                    matchesStatus
+                );
+
+            }
+        );
+
+
+    displayAppointments(filtered);
+
+}
+
+
+/* =========================
+   LOGOUT
+========================= */
+
+function logout() {
+
+    localStorage.removeItem(
+        "loggedInUser"
+    );
+
+    localStorage.removeItem(
+        "userRole"
+    );
+
+    window.location.href =
+        "/login.html";
+
+}
+
+
+/* =========================
+   START
+========================= */
+
+loadPatients();
+
+loadDoctors();
+
+loadAppointments();
+
+</script>
+
+
+</body>
+
+</html>

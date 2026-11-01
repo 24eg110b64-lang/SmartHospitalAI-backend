@@ -1,0 +1,30 @@
+# render.yaml — Render.com service definitions
+# Defines BOTH the Spring Boot backend and the Flask AI service.
+# See: https://render.com/docs/blueprint-spec
+
+services:
+
+  # ─── Spring Boot Backend ──────────────────────────────────────────────────
+  - type: web
+    name: smarthospital-backend
+    runtime: java
+    buildCommand: cd backend && ./mvnw -B package -DskipTests
+    startCommand: java -jar backend/target/demo-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: DB_URL
+        sync: false          # set manually in Render dashboard
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: ALLOWED_ORIGIN
+        sync: false          # set to Vercel frontend URL after deploy
+    healthCheckPath: /actuator/health   # optional — add actuator if desired
+
+  # ─── Python Flask AI Service ───────────────────────────────────────────────
+  - type: web
+    name: smarthospital-ai
+    runtime: python
+    buildCommand: pip install -r ai-service/requirements.txt
+    startCommand: gunicorn --chdir ai-service app:app --bind 0.0.0.0:$PORT
+    envVars: []

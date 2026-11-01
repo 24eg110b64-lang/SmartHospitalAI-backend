@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard - Smart Hospital AI</title>
+
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+<header>
+
+    <h1>🤖 Smart Hospital AI</h1>
+
+    <p>Hospital Management & AI Prediction System</p>
+
+    <button onclick="logout()">
+        🚪 Logout
+    </button>
+
+</header>
+
+
+<div class="container">
+
+    <h2>📊 Hospital Dashboard</h2>
+
+    <p>
+        Welcome, <b id="username"></b> 👋
+    </p>
+
+
+    <!-- ========================= -->
+    <!-- STATISTICS -->
+    <!-- ========================= -->
+
+    <div class="stats">
+
+        <div class="stat-card">
+            <h3>👨‍⚕️ Doctors</h3>
+            <h2 id="doctorCount">0</h2>
+        </div>
+
+        <div class="stat-card">
+            <h3>🧑 Patients</h3>
+            <h2 id="patientCount">0</h2>
+        </div>
+
+        <div class="stat-card">
+            <h3>📅 Appointments</h3>
+            <h2 id="appointmentCount">0</h2>
+        </div>
+
+        <div class="stat-card">
+            <h3>📋 Scheduled</h3>
+            <h2 id="scheduledCount">0</h2>
+        </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- MORE STATISTICS -->
+    <!-- ========================= -->
+
+    <div class="stats">
+
+        <div class="stat-card">
+            <h3>✅ Completed</h3>
+            <h2 id="completedCount">0</h2>
+        </div>
+
+        <div class="stat-card">
+            <h3>❌ Cancelled</h3>
+            <h2 id="cancelledCount">0</h2>
+        </div>
+
+        <div class="stat-card">
+            <h3>📆 Today's Appointments</h3>
+            <h2 id="todayCount">0</h2>
+        </div>
+
+    </div>
+
+
+    <!-- ========================= -->
+    <!-- DASHBOARD MODULES -->
+    <!-- ========================= -->
+
+    <h2>🏥 Hospital Modules</h2>
+
+    <div class="dashboard-cards">
+
+        <div class="dashboard-card">
+
+            <h3>👨‍⚕️ Doctors</h3>
+
+            <p>
+                Manage doctors and their details.
+            </p>
+
+            <button onclick="location.href='/doctors.html'">
+                View Doctors
+            </button>
+
+        </div>
+
+
+        <div class="dashboard-card">
+
+            <h3>🧑 Patients</h3>
+
+            <p>
+                Manage patient information.
+            </p>
+
+            <button onclick="location.href='/patients.html'">
+                View Patients
+            </button>
+
+        </div>
+
+
+        <div class="dashboard-card">
+
+            <h3>📅 Appointments</h3>
+
+            <p>
+                Schedule and manage appointments.
+            </p>
+
+            <button onclick="location.href='/appointments.html'">
+                View Appointments
+            </button>
+
+        </div>
+
+
+        <div class="dashboard-card">
+
+            <h3>🤖 AI Prediction</h3>
+
+            <p>
+                Analyze symptoms using Machine Learning.
+            </p>
+
+            <button onclick="location.href='/ai.html'">
+                Open AI
+            </button>
+
+        </div>
+
+
+        <div class="dashboard-card">
+
+            <h3>📊 Hospital Reports</h3>
+
+            <p>
+                View hospital statistics and reports.
+            </p>
+
+            <button onclick="location.href='/reports.html'">
+                View Reports
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<footer>
+
+    <p>
+        © 2026 Smart Hospital AI
+    </p>
+
+</footer>
+
+
+<script>
+
+
+// ========================================
+// LOGIN PROTECTION
+// ========================================
+
+const user =
+    localStorage.getItem("loggedInUser");
+
+if (!user) {
+
+    window.location.href =
+        "/login.html";
+
+}
+
+
+// Show username
+
+document.getElementById("username")
+    .innerText = user;
+
+
+// ========================================
+// LOAD DASHBOARD DATA
+// ========================================
+
+function loadDashboard() {
+
+
+    // -------------------------------
+    // DOCTORS
+    // -------------------------------
+
+    fetch("/doctors")
+
+        .then(response => response.json())
+
+        .then(data => {
+
+            document.getElementById(
+                "doctorCount"
+            ).innerText = data.length;
+
+        })
+
+        .catch(error => {
+
+            console.error(
+                "Doctor error:",
+                error
+            );
+
+        });
+
+
+    // -------------------------------
+    // PATIENTS
+    // -------------------------------
+
+    fetch("/patients")
+
+        .then(response => response.json())
+
+        .then(data => {
+
+            document.getElementById(
+                "patientCount"
+            ).innerText = data.length;
+
+        })
+
+        .catch(error => {
+
+            console.error(
+                "Patient error:",
+                error
+            );
+
+        });
+
+
+    // -------------------------------
+    // APPOINTMENTS
+    // -------------------------------
+
+    fetch("/appointments")
+
+        .then(response => response.json())
+
+        .then(data => {
+
+            document.getElementById(
+                "appointmentCount"
+            ).innerText = data.length;
+
+
+            // ---------------------------
+            // STATUS COUNTS
+            // ---------------------------
+
+            let scheduled = 0;
+            let completed = 0;
+            let cancelled = 0;
+
+            data.forEach(
+                appointment => {
+
+                    const status =
+                        appointment.status
+                        ?.toLowerCase();
+
+                    if (
+                        status ===
+                        "scheduled"
+                    ) {
+
+                        scheduled++;
+
+                    }
+
+                    else if (
+                        status ===
+                        "completed"
+                    ) {
+
+                        completed++;
+
+                    }
+
+                    else if (
+                        status ===
+                        "cancelled"
+                    ) {
+
+                        cancelled++;
+
+                    }
+
+                }
+            );
+
+
+            document.getElementById(
+                "scheduledCount"
+            ).innerText = scheduled;
+
+
+            document.getElementById(
+                "completedCount"
+            ).innerText = completed;
+
+
+            document.getElementById(
+                "cancelledCount"
+            ).innerText = cancelled;
+
+
+            // ---------------------------
+            // TODAY'S APPOINTMENTS
+            // ---------------------------
+
+            const today =
+                new Date()
+                .toISOString()
+                .split("T")[0];
+
+
+            let todayAppointments = 0;
+
+
+            data.forEach(
+                appointment => {
+
+                    if (
+                        appointment.appointmentDate
+                        === today
+                    ) {
+
+                        todayAppointments++;
+
+                    }
+
+                }
+            );
+
+
+            document.getElementById(
+                "todayCount"
+            ).innerText =
+                todayAppointments;
+
+        })
+
+        .catch(error => {
+
+            console.error(
+                "Appointment error:",
+                error
+            );
+
+        });
+
+}
+
+
+// ========================================
+// LOGOUT
+// ========================================
+
+function logout() {
+
+    localStorage.removeItem(
+        "loggedInUser"
+    );
+
+    localStorage.removeItem(
+        "userRole"
+    );
+
+    window.location.href =
+        "/login.html";
+
+}
+
+
+// ========================================
+// START DASHBOARD
+// ========================================
+
+loadDashboard();
+
+
+</script>
+
+</body>
+
+</html>

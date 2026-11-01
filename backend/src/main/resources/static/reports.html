@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Reports - Smart Hospital AI</title>
+
+    <link rel="stylesheet" href="/style.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+
+<body>
+
+<header>
+
+    <h1>📊 Hospital Reports</h1>
+
+    <p>Smart Hospital AI</p>
+
+    <button onclick="logout()">
+        🚪 Logout
+    </button>
+
+    <button onclick="location.href='/'">
+        🏠 Dashboard
+    </button>
+
+</header>
+
+
+<div class="container">
+
+
+    <!-- STATISTICS -->
+
+    <div class="stats">
+
+
+        <div class="stat-card">
+
+            <h2>👨‍⚕️</h2>
+
+            <h3 id="doctorCount">0</h3>
+
+            <p>Total Doctors</p>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <h2>👤</h2>
+
+            <h3 id="patientCount">0</h3>
+
+            <p>Total Patients</p>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <h2>📅</h2>
+
+            <h3 id="appointmentCount">0</h3>
+
+            <p>Total Appointments</p>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <h2>🟢</h2>
+
+            <h3 id="scheduledCount">0</h3>
+
+            <p>Scheduled</p>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <h2>✅</h2>
+
+            <h3 id="completedCount">0</h3>
+
+            <p>Completed</p>
+
+        </div>
+
+
+        <div class="stat-card">
+
+            <h2>❌</h2>
+
+            <h3 id="cancelledCount">0</h3>
+
+            <p>Cancelled</p>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- STATUS CHART -->
+
+    <div class="form-box">
+
+        <h2>📊 Appointment Status</h2>
+
+        <canvas id="statusChart"></canvas>
+
+    </div>
+
+
+
+    <!-- MONTHLY CHART -->
+
+    <div class="form-box">
+
+        <h2>📅 Appointment Overview</h2>
+
+        <canvas id="monthlyChart"></canvas>
+
+    </div>
+
+
+</div>
+
+
+
+<footer>
+
+    <p>
+        © 2026 Smart Hospital AI |
+        Hospital Management System
+    </p>
+
+</footer>
+
+
+
+<script>
+
+
+/* =========================
+   LOGIN CHECK
+========================= */
+
+const user =
+    localStorage.getItem("loggedInUser");
+
+
+if (!user) {
+
+    window.location.href =
+        "/login.html";
+
+}
+
+
+/* =========================
+   LOAD DATA
+========================= */
+
+Promise.all([
+
+    fetch("/doctors")
+        .then(response => response.json()),
+
+    fetch("/patients")
+        .then(response => response.json()),
+
+    fetch("/appointments")
+        .then(response => response.json())
+
+])
+
+
+.then(([doctors, patients, appointments]) => {
+
+
+    /* COUNTS */
+
+    document.getElementById(
+        "doctorCount"
+    ).innerText = doctors.length;
+
+
+    document.getElementById(
+        "patientCount"
+    ).innerText = patients.length;
+
+
+    document.getElementById(
+        "appointmentCount"
+    ).innerText = appointments.length;
+
+
+
+    /* STATUS COUNTS */
+
+    const scheduled =
+        appointments.filter(a =>
+            a.status &&
+            a.status.toLowerCase() === "scheduled"
+        ).length;
+
+
+    const completed =
+        appointments.filter(a =>
+            a.status &&
+            a.status.toLowerCase() === "completed"
+        ).length;
+
+
+    const cancelled =
+        appointments.filter(a =>
+            a.status &&
+            a.status.toLowerCase() === "cancelled"
+        ).length;
+
+
+    document.getElementById(
+        "scheduledCount"
+    ).innerText = scheduled;
+
+
+    document.getElementById(
+        "completedCount"
+    ).innerText = completed;
+
+
+    document.getElementById(
+        "cancelledCount"
+    ).innerText = cancelled;
+
+
+
+    /* =========================
+       STATUS CHART
+    ========================= */
+
+    new Chart(
+        document.getElementById("statusChart"),
+        {
+
+            type: "doughnut",
+
+            data: {
+
+                labels: [
+                    "Scheduled",
+                    "Completed",
+                    "Cancelled"
+                ],
+
+                datasets: [{
+
+                    data: [
+                        scheduled,
+                        completed,
+                        cancelled
+                    ]
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true
+
+            }
+
+        }
+    );
+
+
+
+    /* =========================
+       MONTHLY DATA
+    ========================= */
+
+    const monthlyCounts = {};
+
+
+
+    appointments.forEach(appointment => {
+
+        const date =
+            appointment.appointmentDate;
+
+
+        if (!date) {
+            return;
+        }
+
+
+        const month =
+            date.substring(0, 7);
+
+
+        if (!monthlyCounts[month]) {
+
+            monthlyCounts[month] = 0;
+
+        }
+
+
+        monthlyCounts[month]++;
+
+    });
+
+
+
+    const months =
+        Object.keys(monthlyCounts)
+        .sort();
+
+
+    const counts =
+        months.map(
+            month =>
+            monthlyCounts[month]
+        );
+
+
+
+    /* =========================
+       MONTHLY CHART
+    ========================= */
+
+    new Chart(
+        document.getElementById("monthlyChart"),
+        {
+
+            type: "bar",
+
+            data: {
+
+                labels: months,
+
+                datasets: [{
+
+                    label:
+                        "Appointments",
+
+                    data: counts
+
+                }]
+
+            },
+
+            options: {
+
+                responsive: true,
+
+                scales: {
+
+                    y: {
+
+                        beginAtZero: true,
+
+                        ticks: {
+
+                            stepSize: 1
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    );
+
+})
+
+
+.catch(error => {
+
+    console.error(
+        "Report error:",
+        error
+    );
+
+});
+
+
+/* =========================
+   LOGOUT
+========================= */
+
+function logout() {
+
+    localStorage.removeItem(
+        "loggedInUser"
+    );
+
+    localStorage.removeItem(
+        "userRole"
+    );
+
+
+    window.location.href =
+        "/login.html";
+
+}
+
+</script>
+
+
+</body>
+
+</html>
